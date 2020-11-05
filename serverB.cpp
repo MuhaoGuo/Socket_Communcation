@@ -29,7 +29,7 @@ using namespace std;
 char buf[MAXDATASIZE];  // define buffer size
 int UDP_SOCKET_STATUS;   // this is the UDP socket we will create 
 
-string all_countrise_names; // this is the string of all countries name split by " " B will send 
+string all_countries_names; // this is the string of all countries name split by " " B will send 
 
 map<string, map<string, set<string> > > all_data;   // key: country_name, value: the data
 struct addrinfo hints;
@@ -39,8 +39,9 @@ struct addrinfo *res_B_server;
 
 void getdata();
 void UDP_init();
-void send_data();
+void send_data(string data);
 void receive_data();
+void recommendation_algorithm(map<string, set<string> > country_map, string id);
 
 void getdata(){
 	ifstream data2("data2.txt"); 
@@ -61,7 +62,7 @@ void getdata(){
 				country_i.clear();           // clear the map
 			}
 			country_name = s;
-			all_countrise_names += s + " ";
+			all_countries_names += s + " ";
 			// cout << all_countrise_names << endl;
 			num_country ++;
 		}else{
@@ -132,9 +133,9 @@ void receive_data(){
 void send_data(string data){
 	char counrties_info[data.length()];
 	strcpy(counrties_info, data.c_str());   // copy from data to counrties_info
-	cout<< "---------------------" << endl;
-	cout << "send from B to Main is " << counrties_info << endl;
-	cout<< "---------------------" << endl;
+	// cout<< "---------------------" << endl;
+	// cout << "send from B to Main is " << counrties_info << endl;
+	// cout<< "---------------------" << endl;
 	if((sendto(UDP_SOCKET_STATUS, counrties_info, data.length(), 0, res_main_server->ai_addr, res_main_server->ai_addrlen)) == -1){	
 		perror("talker: sendto");
 		close(UDP_SOCKET_STATUS);
@@ -145,12 +146,106 @@ void send_data(string data){
 
 
 
+//given u (id) and all_data of this country. 
+//1. find the set N :  n has no connected neighbors with u
+//2. find the set M :  m has connected neighors with u
+//3. if N is not empty:  for every n in N : count the common neighbors of u(id): n's neighbor is also u's neighbor? yes -> +1  , for each n, we have a same_nbr_n
+							// if same_nbr_n == 0 ? -> highest degree: n' which has the most neighbors --> smallest id
+							// else :same_nbr_n > 0  ? --> the bigest same_nbr_n related n is the n,  --> smallest id 
+	// else: N is empty,   None 
+
+// input:  
+// 		map<string, set<string> > country_map
+// 		string id
+#include <algorithm>
+string recommended_id;
+void recommendation_algorithm(map<string, set<string> > country_map, string id){
+	set<string> all_users;
+
+	// traverse the country_map , get all users in this country 
+	map<string, set<string> >::iterator iter;
+    iter = country_map.begin();
+    while(iter != country_map.end()) {
+		set<string> user_neighbors = iter->second;
+		all_users.insert(user_neighbors.begin(), user_neighbors.end());
+        iter++;
+		user_neighbors.clear();
+    }
+
+	// get the connected_set M, directly
+	set<string> connected_set = country_map[id];   //  id's neighbors
+
+	// get the unconnected set N   /*取差集运算*/
+	set<string> unconnected_set;                     // N : those nodes who are not id's neighbors    
+	set_difference(all_users.begin(), all_users.end(),connected_set.begin(), connected_set.end(),inserter( unconnected_set, unconnected_set.begin() ) );  
+	unconnected_set.erase(unconnected_set.find(id)); // delete id itself
+
+	if(unconnected_set.size() == 0){
+		recommended_id = "None";
+	}else{
+		// set the overall variable
+		int highest_degree = 0;         
+		int most_common_nbr_n = 0;
+		set<string>::iterator it;  
+		string first_one = *(unconnected_set.begin());
+		string possible_recommend_id_judged_by_degree = first_one;
+		string possible_recommend_id_judged_by_common_nbrs = first_one;
+
+		// traverse the N (unconnected_set) to find the biggest "common_nbr_n" or biggest "degree"
+		for (it = unconnected_set.begin(); it != unconnected_set.end(); ++it) {
+    		string n = *it;                             //get every n from N set (unconnected_set)
+			set<string> n_neighbors = country_map[n];   //get n's neighbors
+
+			// recrod the n has the largest degree. :  when every common_nbr_n of n  is 0 , we will use it
+			if (highest_degree < n_neighbors.size()){
+				highest_degree = n_neighbors.size();
+				possible_recommend_id_judged_by_degree = n;
+			}else if(highest_degree == n_neighbors.size()){   //when meet the same degree， 
+				if (possible_recommend_id_judged_by_degree > n){
+					possible_recommend_id_judged_by_degree.clear();
+					possible_recommend_id_judged_by_degree = n;
+				}
+			}
+
+			// calculate the possible most_common_neghbors of every n 
+			set<string>::iterator sub_it;        //traverse the n_neighbors
+			int candidate_most_common_nbr_n = 0;
+			for(sub_it = n_neighbors.begin(); sub_it != n_neighbors.end(); ++sub_it){
+				string n_nbr = *sub_it;          //one n's neighbor
+				if(connected_set.find(n_nbr) != connected_set.end()){  // if this n's neighbor also in id's neighbors
+					candidate_most_common_nbr_n ++;
+				}
+			}
+
+			// record the n in N has the most common nbrs with u (id) 
+			if(candidate_most_common_nbr_n > most_common_nbr_n){
+				int temp = most_common_nbr_n;
+				most_common_nbr_n = candidate_most_common_nbr_n;
+				possible_recommend_id_judged_by_common_nbrs = n;
+			}else if(candidate_most_common_nbr_n == most_common_nbr_n){ // when the candidate has same common_nbr_n with the previous most_common_nbr_n
+				if (possible_recommend_id_judged_by_common_nbrs > n){   //  choose the smaller id
+					possible_recommend_id_judged_by_common_nbrs.clear();
+					possible_recommend_id_judged_by_common_nbrs = n;
+				}
+			}
+			// in the end : 
+			// if most_common_nbr_n is 0 , we recommend by degree, else, we recommend by most_common_neghbors
+			if(most_common_nbr_n == 0){
+				recommended_id = possible_recommend_id_judged_by_degree;
+			}else{
+				recommended_id = possible_recommend_id_judged_by_common_nbrs;
+			}
+		}
+	}
+}
+
+
 
 int main (){
-	getdata();      // get data from test1.txt
+	getdata();      // get data from test2.txt
 	UDP_init();     // initial the UDP
 	receive_data(); //  receive the command from the main_server
-	send_data(all_countrise_names);  // send data of all countries to main server
+	send_data(all_countries_names);  // send data of all countries to main server
 	cout << "The server B has sent a country list to Main Server" << endl;
 
 	while(true){
@@ -160,33 +255,29 @@ int main (){
 
 		ss >> country_name;
 		ss >> id;
-		if(!country_name.empty() && !id.empty()){  // if string  not empty
-			cout << "The server B has received request for finding possible friends of User "<< id << "in "<< country_name << endl;
+
+		if(!country_name.empty() && !id.empty()){  // if string not empty
+			cout << "The server B has received request for finding possible friends of User "<< id << " in "<< country_name << endl;
 		}
 
-		map<string, map<string, set<string> > >::iterator it = all_data.find(country_name);   // find the country_name if in the map 
-
-		if(it != all_data.end()){ //  the iterator does not get to end, so there has such country name
-			map<string, set<string> > country_map = it->second;
-			map<string, set<string> >::iterator sub_it = country_map.find(id);  // sub iterator , find the id
+		map<string, map<string, set<string> > >::iterator it = all_data.find(country_name);   // find the country_name if in the map key 
+ 
+		if(it != all_data.end()){ //if we find the country name (that is to say, the iterator does not get to end)
+			map<string, set<string> > country_map = it->second;    
+			map<string, set<string> >::iterator sub_it = country_map.find(id);  // sub iterator , find the id in country_map's key
 			
-			if(sub_it != country_map.end()) {    // if we find this id 
+			if(sub_it != country_map.end()) {              // if we find this id 
 				cout<< "The server B is searching possible friends for User " << id << "...." << endl;
-				set<string> id_nbr_set = sub_it->second;   // this is this id' s neighbor set
-				set<string>::iterator sub_sub_iter;
 
-				string neighbor_users = "";   //////--------??????????????  we will print all this id's neighbors
-				for(sub_sub_iter = id_nbr_set.begin(); sub_sub_iter != id_nbr_set.end(); sub_sub_iter++) {
-					neighbor_users += *sub_sub_iter;
-					neighbor_users += " ";
-				}
+				recommendation_algorithm(country_map, id);
+				cout << "Here are the results:" << recommended_id << endl;     
 
-				cout << "Here are the results:" << neighbor_users << endl;     ///// ????  需计算出结果
-
-				send_data("FIND ServerB" + neighbor_users);  ////   ------------- ??????? 
+				send_data("FIND ServerB " + recommended_id); 
 				cout << "The server B has sent the result(s) to Main Server" << endl;
 			} else {
+				cout<< id << " does not show up in " << country_name << endl;
 				send_data("NO_ID");
+				cout<< "The server B has sent \"User "<< id << " not found\" to Main Server" << endl;
 			}
 		}else{
 			send_data("NO_COUNTRY");

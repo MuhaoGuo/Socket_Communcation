@@ -62,7 +62,8 @@ void init_TCP(){
 		close(TCP_SOCKET_status);
 		exit(1);
     }
-    cout << "The client is up and running" << endl;
+    // client id?????
+    cout << "Client1 is up and running" << endl;
 }
 
 void send_query (string country, string id){
@@ -72,7 +73,8 @@ void send_query (string country, string id){
     strcpy(strc, msg.c_str());
  
     send(TCP_SOCKET_status, strc , msg.size(), 0); // the second parameter: addr will usually be a pointer to a local struct sockaddr_storage.
-    cout << "The client has sent User " << id  << " and " << country << " to Main Server using TCP" << endl;
+    // client id ??? 
+    cout << "Client1 has sent User " << id  << " and " << country << " to Main Server using TCP" << endl;
 }
 
 void receive_result(){
@@ -87,7 +89,7 @@ void receive_result(){
     ss >> command;
 	ss >> country;
 	ss >> id;
-    /////// command  
+
     if (command == "NO_COUNTRY"){        // NO_COUNTRY
         cout << country <<  " not found" << endl;
     }else if(command == "NO_ID"){        // NO_ID
@@ -98,8 +100,8 @@ void receive_result(){
 		while(ss >> user) {
 		    all_recommand_users += "User" + user + ", ";
 		}
-		// string temp = neighbor_users.substr(0, neighbor_users.length() - 2);
-		cout << "The client has results from Main Server :" << all_recommand_users << "is/are possible friend(s) of User " << id << " in " << country << endl;
+        // client id ????????
+		cout << "Client1 has results from Main Server :" << all_recommand_users << "is/are possible friend(s) of User " << id << " in " << country << endl;
     }
 
 }
@@ -109,10 +111,11 @@ int main(){
     init_TCP();
     while(1){
         // get the country and id from the keyboard
-        cout << "Please enter the Country Name: " ;
-        getline(cin, input_country);    
         cout << "Please enter the User ID: ";
 		getline(cin, input_id);
+
+        cout << "Please enter the Country Name: " ;
+        getline(cin, input_country);  
 
         // send the data:(query)
         send_query(input_country, input_id);
@@ -120,7 +123,7 @@ int main(){
         // get the result from the main server:
         receive_result();
 
-        cout << "------Start a new request-------" << endl;
+        cout << "----------Start a new request-----------" << endl;
     }
     return 0;
 }

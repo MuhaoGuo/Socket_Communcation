@@ -227,10 +227,10 @@ void process_country_list(string server) {
 }
 
 
-int main(){
+int main(){ 
     init_TCP();
     init_UDP();
-    cout << "The Main server is up and running" << endl;
+    cout << "The Main server is up and running." << endl;
     
     string req ="give mian server the list";
     // request A for the country list
@@ -265,14 +265,14 @@ int main(){
                 string country;
                 string id;
                 ss.clear();
-				ss.str(buf);    //// 
+				ss.str(buf);   
 				ss >> country; 
 				ss >> id; 
-				cout << " ----------------------------"  << endl;
-				cout << "id is: " <<  id << endl;
-				cout << "country is : " <<  country << endl;  
-				cout << " ----------------------------"  << endl;
-				///////////////   ???????????
+				// cout << " ----------------------------"  << endl;
+				// cout << "id is: " <<  id << endl;
+				// cout << "country is : " <<  country << endl;  
+				// cout << " ----------------------------"  << endl;
+				///////////////   ??????????? client id ???? 
                 cout << "The Main server has received the request on User "<< id << " in " << country << " from the client using TCP over port "<< MAIN_SERVER_TCP_PORT << endl;
                 map<string, string>::iterator it = country_list.find(country);
                 
@@ -295,30 +295,33 @@ int main(){
                     ss >> command;
                     ss >> backend_server;
 
-					cout << "----------------------------------------------" << endl;
-					cout << "command from backserver is " << command << endl;
-					cout << "backend server from backserver is " << backend_server << endl;
-					cout << "----------------------------------------------" << endl;
+					// cout << "----------------------------------------------" << endl;
+					// cout << "command from backserver is " << command << endl;
+					// cout << "backend server from backserver is " << backend_server << endl;
+					// cout << "----------------------------------------------" << endl;
 					
                     if(command == "NO_ID") { // if no user id found
                         cout << "The Main server has received \"User ID: Not Found\" from server " << backend_server;
                         send_data("NO_ID " + country + " " + id);     // error message : cannot find the id
                         cout << "The Main Server has sent error to client using TCP over " << MAIN_SERVER_TCP_PORT << endl;
                     }else{                 // if the id find and receive the result from backend server
-                        string neighbor_users;
-                        string users = "";
-                        while(ss >> neighbor_users) {
-                            users += neighbor_users + " ";
-                        }
+                        // string neighbor_users;
+                        // string users = "";
+                        // while(ss >> neighbor_users) {
+                        //     users += neighbor_users + " ";
+                        // }
+						string recommended_user;
+						ss >> recommended_user;
                         // we should send the result to the client
                         cout << "The Main server has received searching result(s) of User " << id << " from server " << backend_server << endl;
-                        send_data("FIND "  + country + " " + id + " " + users);
+                        send_data("FIND "  + country + " " + id + " " + recommended_user);
                         cout << "The Main Server has sent seraching result(s) to client using TCP over port " << MAIN_SERVER_TCP_PORT << endl;
                     }
                 }else{   // cannot find that country
                     cout<< country << " does not show up in server A&B" << endl;
 					send_data("NO_COUNTRY " + country + " " + id);
-					cout << "The Main Server has sent \"Country Name: Not Found\" to the client using TCP over port "  << MAIN_SERVER_TCP_PORT << endl;
+					// clientd id 
+					cout << "The Main Server has sent \"Country Name: Not Found\" to the client1/2 using TCP over port "  << MAIN_SERVER_TCP_PORT << endl;
                 }
             }
         }
