@@ -46,3 +46,6 @@ How to run:
   4.make mainserver
   5./client1
   6./client2
+
+Environment and Language:
+  Ubuntu (16.04), C++
