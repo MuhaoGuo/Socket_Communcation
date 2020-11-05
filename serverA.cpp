@@ -273,19 +273,12 @@ int main (){
 			if(sub_it != country_map.end()) {              // if we find this id 
 				cout<< "The server A is searching possible friends for User " << id << "...." << endl;
 
-				// set<string> id_nbr_set = sub_it->second;   // this is this id' s neighbors set
-				// set<string>::iterator sub_sub_iter;
-				// string neighbor_users = "";   //////--------??????????????  we will print all this id's neighbors
-				// for(sub_sub_iter = id_nbr_set.begin(); sub_sub_iter != id_nbr_set.end(); sub_sub_iter++) {
-				// 	neighbor_users += *sub_sub_iter;  
-				// 	neighbor_users += " ";
-				// } 
-				//////////////////======
-				recommendation_algorithm(country_map, id);
-				cout << "Here are the results:" << recommended_id << endl;     ///// ????  需计算出结果
-				//////////////////======
 
-				send_data("FIND ServerA " + recommended_id);  ////   ------------- ??????? 
+				recommendation_algorithm(country_map, id);
+				cout << "Here are the results:" << recommended_id << endl;     
+
+
+				send_data("FIND ServerA " + recommended_id);  
 				cout << "The server A has sent the result(s) to Main Server" << endl;
 			} else {
 				cout<< id << " does not show up in " << country_name << endl;

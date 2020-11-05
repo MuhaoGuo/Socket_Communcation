@@ -207,23 +207,15 @@ void print_table(){
 
 void process_country_list(string server) {
 	string backend_server_reply = buf;
-	// cout << "--------------------" << endl;
-	// cout << " buffer is " << backend_server_reply << endl;
-	// cout << "--------------------" << endl;
+
 	ss.clear();
 	ss.str(backend_server_reply);
-	// string server = server_in;
-	string word;
-	// ss >> server;
-       
-	// cout << "--------------------" << endl;
-	// cout << " server is " << server << endl;
 
- 	while(ss >> word) {   // word 没了 ？？？
+	string word;
+
+ 	while(ss >> word) {  
 		country_list.insert(pair<string, string>(word, server));
-		// cout << " word is " << word << endl;
 	}
-	// cout << "--------------------" << endl;
 }
 
 
@@ -305,11 +297,6 @@ int main(){
                         send_data("NO_ID " + country + " " + id);     // error message : cannot find the id
                         cout << "The Main Server has sent error to client using TCP over " << MAIN_SERVER_TCP_PORT << endl;
                     }else{                 // if the id find and receive the result from backend server
-                        // string neighbor_users;
-                        // string users = "";
-                        // while(ss >> neighbor_users) {
-                        //     users += neighbor_users + " ";
-                        // }
 						string recommended_user;
 						ss >> recommended_user;
                         // we should send the result to the client
@@ -327,34 +314,3 @@ int main(){
         }
     }
 }
-
-
-
-
-
-
-// int main(){
-//     //创建套接字
-//     int serv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-//     //将套接字和IP、端口绑定
-//     struct sockaddr_in serv_addr;
-//     memset(&serv_addr, 0, sizeof(serv_addr));  //每个字节都用0填充
-//     serv_addr.sin_family = AF_INET;  //使用IPv4地址
-//     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  //具体的IP地址
-//     serv_addr.sin_port = htons(1234);  //端口
-//     bind(serv_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-//     //进入监听状态，等待用户发起请求
-//     listen(serv_sock, 20);
-//     //接收客户端请求
-//     struct sockaddr_in clnt_addr;
-//     socklen_t clnt_addr_size = sizeof(clnt_addr);
-//     int clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
-//     //向客户端发送数据
-//     char str[] = "Hello World!";
-//     write(clnt_sock, str, sizeof(str));
-   
-//     //关闭套接字
-//     close(clnt_sock);
-//     close(serv_sock);
-//     return 0;
-// }

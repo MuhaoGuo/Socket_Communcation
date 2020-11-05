@@ -133,15 +133,12 @@ void receive_data(){
 void send_data(string data){
 	char counrties_info[data.length()];
 	strcpy(counrties_info, data.c_str());   // copy from data to counrties_info
-	// cout<< "---------------------" << endl;
-	// cout << "send from B to Main is " << counrties_info << endl;
-	// cout<< "---------------------" << endl;
+
 	if((sendto(UDP_SOCKET_STATUS, counrties_info, data.length(), 0, res_main_server->ai_addr, res_main_server->ai_addrlen)) == -1){	
 		perror("talker: sendto");
 		close(UDP_SOCKET_STATUS);
 		exit(1);
 	}
-	// cout << "The server A has sent a country list to Main Server ？？？？？" << endl;
 }
 
 
